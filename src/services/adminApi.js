@@ -18,7 +18,13 @@ const withTimeout = async (promise, ms = 15000) => {
 
 const baseUrl = (import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/$/, '')
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const proxyUrl = import.meta.env.VITE_SUPABASE_PROXY_URL || ''
+const configuredProxy = import.meta.env.VITE_SUPABASE_PROXY_URL || ''
+
+const getProxyBase = () => {
+  if (configuredProxy) return configuredProxy.replace(/\/$/, '')
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin
+  return ''
+}
 
 const getAuthHeaders = async () => {
   ensureClient()
@@ -36,8 +42,9 @@ const getAuthHeaders = async () => {
 
 const restGet = async (path, search) => {
   const headers = await getAuthHeaders()
-  const url = proxyUrl
-    ? `${proxyUrl}/api/${path}${search ? `?${search}` : ''}`
+  const proxyBase = getProxyBase()
+  const url = proxyBase
+    ? `${proxyBase}/api/${path}${search ? `?${search}` : ''}`
     : `${baseUrl}/rest/v1/${path}${search ? `?${search}` : ''}`
   const res = await withTimeout(fetch(url, { method: 'GET', headers, mode: 'cors', cache: 'no-store' }))
   if (!res.ok) {
@@ -49,8 +56,9 @@ const restGet = async (path, search) => {
 
 const restInsert = async (table, rows) => {
   const headers = await getAuthHeaders()
-  const url = proxyUrl
-    ? `${proxyUrl}/api/${table}`
+  const proxyBase = getProxyBase()
+  const url = proxyBase
+    ? `${proxyBase}/api/${table}`
     : `${baseUrl}/rest/v1/${table}`
   const res = await withTimeout(fetch(url, { method: 'POST', headers, body: JSON.stringify(rows), mode: 'cors' }))
   if (!res.ok) {
@@ -62,8 +70,9 @@ const restInsert = async (table, rows) => {
 
 const restUpdateById = async (table, id, patch) => {
   const headers = await getAuthHeaders()
-  const url = proxyUrl
-    ? `${proxyUrl}/api/${table}/${encodeURIComponent(id)}`
+  const proxyBase = getProxyBase()
+  const url = proxyBase
+    ? `${proxyBase}/api/${table}/${encodeURIComponent(id)}`
     : `${baseUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`
   const res = await withTimeout(fetch(url, { method: 'PATCH', headers, body: JSON.stringify(patch), mode: 'cors' }))
   if (!res.ok) {
@@ -75,8 +84,9 @@ const restUpdateById = async (table, id, patch) => {
 
 const restDeleteById = async (table, id) => {
   const headers = await getAuthHeaders()
-  const url = proxyUrl
-    ? `${proxyUrl}/api/${table}/${encodeURIComponent(id)}`
+  const proxyBase = getProxyBase()
+  const url = proxyBase
+    ? `${proxyBase}/api/${table}/${encodeURIComponent(id)}`
     : `${baseUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`
   const res = await withTimeout(fetch(url, { method: 'DELETE', headers, mode: 'cors' }))
   if (!res.ok) {
