@@ -1,16 +1,41 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = ({ children }) => {
   const location = useLocation();
-  // Sadece /admin-login'den başarılı girişle gelmişse izin ver (tek seferlik)
-  const ok = location?.state?.__fromLogin === true;
+  const { loading, session, role } = useAuth() || {};
 
-  return ok ? (
-    children
-  ) : (
-    <Navigate to="/admin-login" replace state={{ from: location.pathname }} />
-  );
+  // Initial boot: show loader until we know session/role
+  if (!session && loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center text-gray-500">
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  // No session → go login
+  if (!session) {
+    return (
+      <Navigate to="/admin-login" replace state={{ from: location.pathname }} />
+    );
+  }
+
+  // If we have session but role not resolved yet (e.g. token refresh), allow previous role to persist
+  if (role == null && loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center text-gray-500">
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  if (role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

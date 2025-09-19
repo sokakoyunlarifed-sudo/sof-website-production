@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../Pages/Layout";
-import newsData from "../data/haberler.json";
-import duyuruData from "../data/duyurular.json";
-import kurullarData from "../data/kurullar.json";
 import { FaBars } from "react-icons/fa";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-const LS_KEY = "sof_admin_data_v1";
+import {
+  fetchNews,
+  fetchAnnouncements,
+  fetchCommittees,
+  createNews,
+  updateNews,
+  deleteNews,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  createCommittee,
+  updateCommittee,
+  deleteCommittee,
+} from "../services/adminApi";
 
 const AdminPanel = () => {
   const [tab, setTab] = useState("haberler");
@@ -23,41 +32,32 @@ const AdminPanel = () => {
     duyurular: [],
     kurullar: [],
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  // ---- storage helpers ----
-  const saveToLS = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
-  const loadFromLS = () => {
+  const loadAll = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return null;
+      const [haberler, duyurular, kurullar] = await Promise.all([
+        fetchNews(),
+        fetchAnnouncements(),
+        fetchCommittees(),
+      ]);
+      setItems({ haberler, duyurular, kurullar });
+    } catch (e) {
+      console.error("Load error:", e);
+      setError(e?.message || "Veriler yüklenemedi");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // init
   useEffect(() => {
-    const cached = loadFromLS();
-    if (cached) {
-      setItems(cached);
-    } else {
-      const seed = {
-        haberler: newsData,
-        duyurular: duyuruData,
-        kurullar: kurullarData,
-      };
-      setItems(seed);
-      saveToLS(seed);
-    }
+    loadAll();
   }, []);
 
-  // ---- delete ----
-  const handleDelete = (type, id) => {
-    const next = { ...items, [type]: items[type].filter((i) => i.id !== id) };
-    setItems(next);
-    saveToLS(next);
-  };
-
-  // ---- modal open (add/edit) ----
   const openModal = (item = null) => {
     setEditItem(item);
     setFormData(item || {});
@@ -76,70 +76,75 @@ const AdminPanel = () => {
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Görsel 2MB üstü. Daha küçük seç kanka.");
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert("Görsel 5MB üstü. Daha küçük seç.");
       return;
     }
     try {
-      const b64 = await toBase64(file);
-      setFormData((p) => ({ ...p, image: b64 }));
-    } catch {
-      alert("Görsel okunamadı.");
+      // mediaa bucket -> folder by tab
+      const folder = tab === 'haberler' ? 'news' : (tab === 'duyurular' ? 'announcements' : 'committees')
+      const url = await (await import('../services/adminApi')).uploadMedia(file, folder)
+      setFormData((p) => ({ ...p, image: url }));
+    } catch (err) {
+      alert(err?.message || "Görsel yüklenemedi.");
+    }
+  };
+
+  // ---- delete ----
+  const handleDelete = async (type, id) => {
+    try {
+      if (type === "haberler") await deleteNews(id);
+      if (type === "duyurular") await deleteAnnouncement(id);
+      if (type === "kurullar") await deleteCommittee(id);
+      setItems((prev) => ({ ...prev, [type]: prev[type].filter((i) => i.id !== id) }));
+    } catch (e) {
+      alert(e?.message || "Silme başarısız");
     }
   };
 
   // ---- save (add/edit) ----
-  const handleSave = () => {
-    const next = { ...items };
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      if (tab === "haberler") {
+        if (editItem) {
+          await updateNews(editItem.id, formData);
+        } else {
+          await createNews(formData);
+        }
+        const fresh = await fetchNews();
+        setItems((p) => ({ ...p, haberler: fresh }));
+      }
 
-    if (tab === "haberler") {
-      const newEntry = {
-        id: editItem ? editItem.id : Date.now(),
-        title: formData.title || "",
-        date: formData.date || "",
-        shortText: formData.shortText || "",
-        fullText: formData.fullText || "",
-        image: formData.image || "",
-        aosDelay: editItem
-          ? editItem.aosDelay
-          : String(((items.haberler?.length || 0) % 4) * 200), // 0/200/400/600
-      };
-      next.haberler = editItem
-        ? items.haberler.map((i) => (i.id === editItem.id ? newEntry : i))
-        : [...items.haberler, newEntry];
+      if (tab === "duyurular") {
+        if (editItem) {
+          await updateAnnouncement(editItem.id, formData);
+        } else {
+          await createAnnouncement(formData);
+        }
+        const fresh = await fetchAnnouncements();
+        setItems((p) => ({ ...p, duyurular: fresh }));
+      }
+
+      if (tab === "kurullar") {
+        if (editItem) {
+          await updateCommittee(editItem.id, formData);
+        } else {
+          await createCommittee(formData);
+        }
+        const fresh = await fetchCommittees();
+        setItems((p) => ({ ...p, kurullar: fresh }));
+      }
+
+      setFormData({});
+      setEditItem(null);
+      setModalOpen(false);
+    } catch (e) {
+      console.error("Save error:", e);
+      alert(e?.message || "Kaydetme başarısız");
+    } finally {
+      setSaving(false);
     }
-
-    if (tab === "duyurular") {
-      const newEntry = {
-        id: editItem ? editItem.id : Date.now(),
-        title: formData.title || "",
-        date: formData.date || "",
-        location: formData.location || "",
-        description: formData.description || "",
-        image: formData.image || "",
-      };
-      next.duyurular = editItem
-        ? items.duyurular.map((i) => (i.id === editItem.id ? newEntry : i))
-        : [...items.duyurular, newEntry];
-    }
-
-    if (tab === "kurullar") {
-      const newEntry = {
-        id: editItem ? editItem.id : Date.now(),
-        name: formData.name || "",
-        role: formData.role || "",
-        image: formData.image || "",
-      };
-      next.kurullar = editItem
-        ? items.kurullar.map((i) => (i.id === editItem.id ? newEntry : i))
-        : [...items.kurullar, newEntry];
-    }
-
-    setItems(next);
-    saveToLS(next);
-    setFormData({});
-    setEditItem(null);
-    setModalOpen(false);
   };
 
   // ortak input cls
@@ -339,6 +344,8 @@ const AdminPanel = () => {
           <main className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold capitalize">{tab} Yönetimi</h2>
+              {loading && <span className="text-sm text-gray-400">Yükleniyor...</span>}
+              {error && <span className="text-sm text-red-400">{error}</span>}
             </div>
 
             {/* Grid listeleri sayfa tasarımlarına benzer */}
@@ -416,6 +423,15 @@ const AdminPanel = () => {
                     onChange={handleImageFile}
                   />
                 </label>
+                {formData.image ? (
+                  <div className="mt-3 flex justify-center">
+                    <img
+                      src={formData.image}
+                      alt="Seçilen görsel"
+                      className="max-h-40 rounded shadow"
+                    />
+                  </div>
+                ) : null}
               </div>
 
               {/* URL inputu (upload alternatifi) */}
@@ -551,9 +567,10 @@ const AdminPanel = () => {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white"
+                  disabled={saving}
+                  className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white disabled:opacity-60"
                 >
-                  Kaydet
+                  {saving ? "Kaydediliyor..." : "Kaydet"}
                 </button>
               </div>
             </div>

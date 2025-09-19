@@ -33,15 +33,15 @@ export default function App() {
         {/* Ana sayfa */}
         <Route path="/" element={<Home />} />
         {/* İleride başka sayfalar için buraya Route ekleyebilirsin */}
-        <Route path="/Haberler" element={<Haberlist />} />
+        <Route path="/haberler" element={<Haberlist />} />
         <Route path="/haber/:id" element={<HaberDetail />} />
 
-        <Route path="/Duyurular" element={<Duyurular />} />
+        <Route path="/duyurular" element={<Duyurular />} />
         <Route path="/duyuru/:id" element={<DuyuruDetail />} />
 
-        <Route path="Hakkimizda" element={<Hakkimizda />} />
-        <Route path="Iletisim" element={<Iletisim />} />
-        <Route path="Kurullar" element={<Kurullar />} />
+        <Route path="/hakkimizda" element={<Hakkimizda />} />
+        <Route path="/iletisim" element={<Iletisim />} />
+        <Route path="/kurullar" element={<Kurullar />} />
 
         {/* Admin */}
         <Route path="/admin-login" element={<AdminLogin />} />
@@ -53,6 +53,9 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
+        {/* Fallback */}
+        <Route path="*" element={<Home />} />
 
       </Routes>
     </Router>

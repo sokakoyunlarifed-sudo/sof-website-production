@@ -1,31 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiEye, HiEyeOff, HiMail, HiLockClosed } from "react-icons/hi";
 import Logo from "../assets/Website/Logo.png";
-
-const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL ?? "").toString();
-const ADMIN_PASS = (import.meta.env.VITE_ADMIN_PASS ?? "").toString();
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/admin";
+  const { session, role } = useAuth() || {};
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    // Already authenticated admin → go to admin panel
+    if (session && role === "admin") {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [session, role, redirectTo, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!ADMIN_EMAIL || !ADMIN_PASS) {
-      setError("⚠️ Sunucu yapılandırma hatası: .env değerleri eksik.");
+    setError("");
+    if (!supabase) {
+      setError("Sunucu yapılandırma hatası: Supabase env değişkenleri eksik.");
       return;
     }
-    if (email.trim() === ADMIN_EMAIL && password.trim() === ADMIN_PASS) {
-      setError("");
-      navigate(redirectTo, { replace: true, state: { __fromLogin: true } });
-    } else {
-      setError("❌ Email veya şifre yanlış.");
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+      if (error) throw error;
+      // Navigate immediately; PrivateRoute will allow only admin
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      setError(err?.message || "Giriş başarısız");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,9 +86,10 @@ const AdminLogin = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@sof.web.tr"
+                placeholder="admin@example.com"
                 className="w-full rounded-3xl border-none bg-primary/30 px-6 py-3 text-center placeholder-gray-200 text-white shadow-lg outline-none backdrop-blur-md focus:ring-2 focus:ring-primary"
                 autoFocus
+                required
               />
             </div>
 
@@ -88,6 +106,7 @@ const AdminLogin = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="********"
                   className="w-full rounded-3xl border-none bg-primary/30 px-6 py-3 text-center placeholder-gray-200 text-white shadow-lg outline-none backdrop-blur-md focus:ring-2 focus:ring-primary"
+                  required
                 />
                 <button
                   type="button"
@@ -106,9 +125,10 @@ const AdminLogin = () => {
             <div className="mt-6 flex justify-center text-lg">
               <button
                 type="submit"
-                className="rounded-3xl bg-primary/70 hover:bg-primary/90 px-10 py-2 text-white shadow-xl transition-colors duration-300"
+                disabled={loading}
+                className="rounded-3xl bg-primary/70 hover:bg-primary/90 px-10 py-2 text-white shadow-xl transition-colors duration-300 disabled:opacity-60"
               >
-                Giriş Yap
+                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
               </button>
             </div>
           </form>

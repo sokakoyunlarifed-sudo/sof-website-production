@@ -8,6 +8,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        var saved = window.sessionStorage.getItem('spa:path');
+        if (saved && saved !== location.pathname + location.search + location.hash) {
+          window.sessionStorage.removeItem('spa:path');
+          history.replaceState(null, '', saved);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="0;url=/">
+  </head>
+  <body>
+    <script>
+      // Client-side redirect to preserve path for SPAs on static hosts
+      (function() {
+        var l = window.location;
+        var redirect = '/' + (l.pathname + l.search + l.hash).replace(/^\//, '');
+        window.sessionStorage.setItem('spa:path', redirect);
+        l.replace('/');
+      })();
+    </script>
+  </body>
+</html> 
