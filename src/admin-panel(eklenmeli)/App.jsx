@@ -1,5 +1,5 @@
 import React from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import AOS from "aos"
 import "aos/dist/aos.css"
 
@@ -11,9 +11,11 @@ import DuyuruDetail from "./Pages/DuyuruDetail"
 import Hakkimizda from "./Pages/Hakkimizda"
 import Iletisim from "./Pages/Iletisim"
 import Kurullar from "./Pages/Kurullar"
-import AdminLogin from "./admin-panel(eklenmeli)/AdminLogin"
-import AdminPanel from "./admin-panel(eklenmeli)/AdminPanel"
-import PrivateRoute from "./admin-panel(eklenmeli)/PrivateRoute"
+
+import AdminLogin from "./Pages/AdminLogin"
+import AdminPanel from "./Pages/AdminPanel"
+import PrivateRoute from "./Pages/PrivateRoute"
+
 export default function App() {
   React.useEffect(() => {
     AOS.init({
@@ -28,20 +30,19 @@ export default function App() {
   }, [])
 
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         {/* Ana sayfa */}
         <Route path="/" element={<Home />} />
-        {/* İleride başka sayfalar için buraya Route ekleyebilirsin */}
         <Route path="/Haberler" element={<Haberlist />} />
         <Route path="/haber/:id" element={<HaberDetail />} />
 
         <Route path="/Duyurular" element={<Duyurular />} />
         <Route path="/duyuru/:id" element={<DuyuruDetail />} />
 
-        <Route path="Hakkimizda" element={<Hakkimizda />} />
-        <Route path="Iletisim" element={<Iletisim />} />
-        <Route path="Kurullar" element={<Kurullar />} />
+        <Route path="/Hakkimizda" element={<Hakkimizda />} />
+        <Route path="/Iletisim" element={<Iletisim />} />
+        <Route path="/Kurullar" element={<Kurullar />} />
 
         {/* Admin */}
         <Route path="/admin-login" element={<AdminLogin />} />
@@ -53,8 +54,7 @@ export default function App() {
             </PrivateRoute>
           }
         />
-
       </Routes>
-    </Router>
+    </BrowserRouter>
   )
 }
