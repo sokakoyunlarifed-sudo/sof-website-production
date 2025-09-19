@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Geleneksel Çocuk Oyunları Etkinliği Düzenlendi",
+    "date": "2025-05-14",
+    "shortText": "Çocuklar çuval koşusu, halat çekme ve sek sek gibi oyunlarla hem eğlendi hem de kültürel değerlerimizi yaşattı.",
+    "fullText": "İlçe Milli Eğitim ile birlikte düzenlenen etkinlikte çocuklarımız geleneksel oyunlarla buluşturuldu. Çuval koşusu, halat çekme, sek sek gibi oyunlarla hem eğlendiler hem de unutulmaya yüz tutmuş değerlerimizi yeniden yaşadılar. Etkinliğe veliler de yoğun ilgi gösterdi, sokak oyunlarının çocukların sosyal gelişimindeki önemi vurgulandı.",
+    "image": "/news/etkinlik1.jpg",
+    "aosDelay": "0"
+  },
+  {
+    "id": 2,
+    "title": "Tuz Mağarası’nda Sokak Oyunları Şenliği",
+    "date": "2025-03-01",
+    "shortText": "Çankırı Tuz Mağarası’nda çocuklar geleneksel oyunları farklı bir atmosferde oynadı.",
+    "fullText": "Çankırı Tuz Mağarası’nda gerçekleştirilen şenlikte çocuklar yumurta taşıma, çuval koşusu ve sek sek gibi oyunlarla unutulmaz bir gün yaşadı. Katılımcılar, oyunların kültürümüzün bir parçası olduğunu ve bu tür etkinliklerle çocuklara aktarılmasının çok önemli olduğunu ifade ettiler.",
+    "image": "/news/etkinlik2.jpg",
+    "aosDelay": "300"
+  },
+  {
+    "id": 3,
+    "title": "Sokak Oyunları Turnuvası Başladı",
+    "date": "2025-02-10",
+    "shortText": "Federasyonumuzun düzenlediği sokak oyunları turnuvası coşkuyla başladı.",
+    "fullText": "Türkiye’nin dört bir yanından gelen çocukların katılımıyla Sokak Oyunları Federasyonu’nun düzenlediği büyük turnuva başladı. Çuval koşusu, halat çekme, sek sek gibi geleneksel oyunlar turnuvaya damgasını vurdu. Hem çocuklar hem aileler unutulmaz anılar yaşadı, kültürümüzün yaşatılması adına büyük bir adım atıldı.",
+    "image": "/news/etkinlik3.jpg",
+    "aosDelay": "500"
+  }
+]

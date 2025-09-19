@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "title": "Sokak Oyunları Bahar Turnuvası Kayıtları Başladı",
+    "date": "2025-10-25",
+    "location": "Ankara Gençlik Parkı",
+    "description": "Bahar turnuvamız için kayıtlar açıldı. Katılmak isteyenler 20 Ekim’e kadar başvuru yapabilirler.",
+    "image": "/announcements/turnuva.jpg"
+  },
+  {
+    "id": 2,
+    "title": "Çocuk Oyunları Festivali",
+    "date": "2025-11-12",
+    "location": "İstanbul Maltepe Sahili",
+    "description": "Festivalde geleneksel oyunlarımız tanıtılacak, atölyeler ve yarışmalar düzenlenecek.",
+    "image": "/announcements/festival.jpg"
+  },
+  {
+    "id": 3,
+    "title": "Halat Çekme Şampiyonası",
+    "date": "2026-01-08",
+    "location": "Konya Spor Salonu",
+    "description": "Türkiye çapında düzenlenen halat çekme şampiyonasında takımlar kıyasıya mücadele edecek.",
+    "image": "/announcements/halat.jpg"
+  },
+  {
+    "id": 4,
+    "title": "Yaz Oyunları Kampı",
+    "date": "2026-06-15",
+    "location": "Antalya Kamp Alanı",
+    "description": "Yaz tatilinde çocuklar için oyunlar, doğa yürüyüşleri ve eğlenceli aktivitelerle dolu bir kamp.",
+    "image": "/announcements/kamp.jpg"
+  },
+  {
+    "id": 5,
+    "title": "Geleneksel Oyunlar Semineri",
+    "date": "2025-12-05",
+    "location": "İzmir Kültür Merkezi",
+    "description": "Geleneksel oyunlarımızın tarihçesi ve önemi üzerine uzman konuşmacıların katılacağı bir seminer.",
+    "image": "/announcements/seminer.jpg"
+  },
+  {
+    "id": 6,
+    "title": "Köy Oyunları Günü",
+    "date": "2025-09-30",
+    "location": "Bursa Köy Meydanı",
+    "description": "Köy oyunlarının sergileneceği, halk oyunları ve yarışmaların düzenleneceği bir etkinlik.",
+    "image": "/announcements/koy.jpg"
+  },
+  {
+    "id": 7,
+    "title": "Sokak Oyunları Atölyesi",
+    "date": "2025-10-10",
+    "location": "Eskişehir Sanat Merkezi",
+    "description": "Çocuklar için sokak oyunları atölyesi. Geleneksel oyunlarımızı öğrenmek ve eğlenmek için harika bir fırsat.",
+    "image": "/announcements/atolye.jpg"
+  },
+  {
+    "id": 8,
+    "title": "Kış Oyunları Festivali",
+    "date": "2026-02-20",
+    "location": "Erzurum Kayak Merkezi",
+    "description": "Kış oyunlarının tanıtılacağı, kar üzerinde oynanan geleneksel oyunların sergileneceği bir festival.",
+    "image": "/announcements/kis.jpg"
+  },
+  {
+    "id": 9,
+    "title": "Geleneksel Oyunlar Sergisi",
+    "date": "2025-11-25",
+    "location": "Ankara Sanat Galerisi",
+    "description": "Geleneksel oyunlarımızın tarihini ve kültürel önemini anlatan bir sergi.",
+    "image": "/announcements/sergi.jpg"
+  },
+  {
+    "id": 10,
+    "title": "Çocuklar İçin Oyun Günü",
+    "date": "2025-12-15",
+    "location": "Adana Çocuk Parkı",
+    "description": "Çocuklar için çeşitli oyunların ve aktivitelerin düzenleneceği eğlenceli bir gün.",
+    "image": "/announcements/cocuk.jpg"
+  },
+  {
+    "id": 11,
+    "title": "Sokak Oyunları Turnuvası",
+    "date": "2026-03-10",
+    "location": "Gaziantep Şehir Parkı",
+    "description": "Sokak oyunları turnuvasında takımlar yarışacak, eğlenceli ve heyecanlı anlar yaşanacak.",
+    "image": "/announcements/turnuva2.jpg"
+  },
+  {
+    "id": 12,
+    "title": "Geleneksel Oyunlar Atölyesi",
+    "date": "2025-10-18",
+    "location": "Mersin Kültür Merkezi",
+    "description": "Geleneksel oyunlarımızı öğrenmek isteyenler için düzenlenen atölye çalışması.",
+    "image": "/announcements/atolye2.jpg"
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Yönetim Kurulu",
+    "role": "Federasyon Başkanı ve üyeleri",
+    "image": "kurullar/yonetim.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Etkinlik Kurulu",
+    "role": "Turnuvalar ve şenlikler düzenleme",
+    "image": "kurullar/etkinlik.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Eğitim Kurulu",
+    "role": "Çocuklar ve gençlere eğitim programları",
+    "image": "kurullar/egitim.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Teknik Kurul",
+    "role": "Oyun kuralları ve standartlar",
+    "image": "kurullar/teknik.jpg"
+  },
+    {
+        "id": 5,
+        "name": "Disiplin Kurulu",
+        "role": "Davranış ve etik kuralları",
+        "image": "kurullar/disiplin.jpg"
+    },
+    {
+        "id": 6,
+        "name": "Sağlık Kurulu",
+        "role": "Sporcuların sağlık ve güvenliği",
+        "image": "kurullar/saglik.jpg"
+    },
+    {
+        "id": 7,
+        "name": "Pazarlama ve İletişim Kurulu",
+        "role": "Tanıtım ve sponsorluk faaliyetleri",
+        "image": "kurullar/pazarlama.jpg"
+    },
+    {
+        "id": 8,
+        "name": "Finans Kurulu",
+        "role": "Bütçe ve mali denetim",
+        "image": "kurullar/finans.jpg"
+    },
+    {
+        "id": 9,
+        "name": "Uluslararası İlişkiler Kurulu",
+        "role": "Yurt dışı ilişkiler ve işbirlikleri",
+        "image": "kurullar/uluslararasi.jpg"
+    }
+]
