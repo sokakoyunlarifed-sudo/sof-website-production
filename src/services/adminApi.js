@@ -1,110 +1,56 @@
 import { supabase } from '../lib/supabaseClient'
 
+// Basic guard to ensure Supabase client is configured
 const ensureClient = () => {
   if (!supabase) throw new Error('Supabase client is not configured')
 }
 
-const withTimeout = async (promise, ms = 15000) => {
-  let t
+const withTimeout = async (promise, ms = 20000) => {
+  let timer
   const timeout = new Promise((_, reject) => {
-    t = setTimeout(() => reject(new Error('İstek zaman aşımına uğradı')), ms)
+    timer = setTimeout(() => reject(new Error('Operation timed out')), ms)
   })
   try {
     return await Promise.race([promise, timeout])
   } finally {
-    clearTimeout(t)
+    clearTimeout(timer)
   }
 }
 
-const baseUrl = (import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/$/, '')
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const configuredProxy = import.meta.env.VITE_SUPABASE_PROXY_URL || ''
-
-const getProxyBase = () => {
-  if (configuredProxy) return configuredProxy.replace(/\/$/, '')
-  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin
-  return ''
-}
-
-const getAuthHeaders = async () => {
+// Fetch current user's role from profiles table
+const getCurrentUserRole = async () => {
   ensureClient()
-  const { data } = await supabase.auth.getSession()
-  const accessToken = data?.session?.access_token
-  const headers = {
-    apikey: anonKey,
-    Authorization: `Bearer ${accessToken || anonKey}`,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Prefer: 'return=minimal',
-  }
-  return headers
+  const { data: sessionData } = await supabase.auth.getSession()
+  const userId = sessionData?.session?.user?.id
+  if (!userId) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  if (error) return null
+  return data?.role || null
 }
 
-const restGet = async (path, search) => {
-  const headers = await getAuthHeaders()
-  const proxyBase = getProxyBase()
-  const url = proxyBase
-    ? `${proxyBase}/api/${path}${search ? `?${search}` : ''}`
-    : `${baseUrl}/rest/v1/${path}${search ? `?${search}` : ''}`
-  const res = await withTimeout(fetch(url, { method: 'GET', headers, mode: 'cors', cache: 'no-store' }))
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '')
-    throw new Error(txt || `HTTP ${res.status}`)
-  }
-  return res.json()
+// Ensure the current user is an admin before allowing writes
+const ensureAdmin = async () => {
+  const role = await getCurrentUserRole()
+  if (role !== 'admin') throw new Error('Only admin users can perform this action')
 }
 
-const restInsert = async (table, rows) => {
-  const headers = await getAuthHeaders()
-  const proxyBase = getProxyBase()
-  const url = proxyBase
-    ? `${proxyBase}/api/${table}`
-    : `${baseUrl}/rest/v1/${table}`
-  const res = await withTimeout(fetch(url, { method: 'POST', headers, body: JSON.stringify(rows), mode: 'cors' }))
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '')
-    throw new Error(txt || `HTTP ${res.status}`)
-  }
-  return null
-}
-
-const restUpdateById = async (table, id, patch) => {
-  const headers = await getAuthHeaders()
-  const proxyBase = getProxyBase()
-  const url = proxyBase
-    ? `${proxyBase}/api/${table}/${encodeURIComponent(id)}`
-    : `${baseUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`
-  const res = await withTimeout(fetch(url, { method: 'PATCH', headers, body: JSON.stringify(patch), mode: 'cors' }))
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '')
-    throw new Error(txt || `HTTP ${res.status}`)
-  }
-  return null
-}
-
-const restDeleteById = async (table, id) => {
-  const headers = await getAuthHeaders()
-  const proxyBase = getProxyBase()
-  const url = proxyBase
-    ? `${proxyBase}/api/${table}/${encodeURIComponent(id)}`
-    : `${baseUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`
-  const res = await withTimeout(fetch(url, { method: 'DELETE', headers, mode: 'cors' }))
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '')
-    throw new Error(txt || `HTTP ${res.status}`)
-  }
-}
-
+// ------- MEDIA UPLOAD -------
 export const uploadMedia = async (file, folder = 'misc') => {
   ensureClient()
   if (!(file instanceof File)) throw new Error('Invalid file')
-  const safeFolder = folder.replace(/[^a-z0-9/_-]/gi, '').toLowerCase() || 'misc'
+  const safeFolder = (folder || 'misc').replace(/[^a-z0-9/_-]/gi, '').toLowerCase()
   const ext = (file.name?.split('.')?.pop() || 'bin').toLowerCase()
-  const unique = `${Date.now()}-${(typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`
+  const unique = `${Date.now()}-${(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2))}`
   const path = `${safeFolder}/${unique}.${ext}`
 
   const { error: uploadError } = await withTimeout(
-    supabase.storage.from('mediaa').upload(path, file, { upsert: true, contentType: file.type || undefined })
+    supabase.storage
+      .from('mediaa')
+      .upload(path, file, { upsert: true, contentType: file.type || undefined })
   )
   if (uploadError) throw uploadError
 
@@ -113,9 +59,14 @@ export const uploadMedia = async (file, folder = 'misc') => {
   return data.publicUrl
 }
 
-// NEWS (haberler)
+// ------- NEWS (haberler) -------
 export const fetchNews = async () => {
-  const data = await restGet('news', 'select=id,title,date,short_text,full_text,image&order=date.desc')
+  ensureClient()
+  const { data, error } = await supabase
+    .from('news')
+    .select('id,title,date,short_text,full_text,image')
+    .order('date', { ascending: false })
+  if (error) throw new Error(error.message)
   return (data || []).map((n) => ({
     id: n.id,
     title: n.title,
@@ -127,18 +78,23 @@ export const fetchNews = async () => {
 }
 
 export const createNews = async (payload) => {
-  const insert = [{
+  ensureClient()
+  await ensureAdmin()
+  const row = {
     title: payload.title || '',
     date: payload.date || null,
     short_text: payload.shortText || '',
     full_text: payload.fullText || '',
     image: payload.image || '',
-  }]
-  await restInsert('news', insert)
+  }
+  const { error } = await withTimeout(supabase.from('news').insert(row))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const updateNews = async (id, payload) => {
+  ensureClient()
+  await ensureAdmin()
   const patch = {
     title: payload.title || '',
     date: payload.date || null,
@@ -146,17 +102,26 @@ export const updateNews = async (id, payload) => {
     full_text: payload.fullText || '',
     image: payload.image || '',
   }
-  await restUpdateById('news', id, patch)
+  const { error } = await withTimeout(supabase.from('news').update(patch).eq('id', id))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const deleteNews = async (id) => {
-  await restDeleteById('news', id)
+  ensureClient()
+  await ensureAdmin()
+  const { error } = await withTimeout(supabase.from('news').delete().eq('id', id))
+  if (error) throw new Error(error.message)
 }
 
-// ANNOUNCEMENTS (duyurular)
+// ------- ANNOUNCEMENTS (duyurular) -------
 export const fetchAnnouncements = async () => {
-  const data = await restGet('announcements', 'select=id,title,date,location,description,image&order=date.desc')
+  ensureClient()
+  const { data, error } = await supabase
+    .from('announcements')
+    .select('id,title,date,location,description,image')
+    .order('date', { ascending: false })
+  if (error) throw new Error(error.message)
   return (data || []).map((d) => ({
     id: d.id,
     title: d.title,
@@ -168,18 +133,23 @@ export const fetchAnnouncements = async () => {
 }
 
 export const createAnnouncement = async (payload) => {
-  const insert = [{
+  ensureClient()
+  await ensureAdmin()
+  const row = {
     title: payload.title || '',
     date: payload.date || null,
     location: payload.location || '',
     description: payload.description || '',
     image: payload.image || '',
-  }]
-  await restInsert('announcements', insert)
+  }
+  const { error } = await withTimeout(supabase.from('announcements').insert(row))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const updateAnnouncement = async (id, payload) => {
+  ensureClient()
+  await ensureAdmin()
   const patch = {
     title: payload.title || '',
     date: payload.date || null,
@@ -187,40 +157,58 @@ export const updateAnnouncement = async (id, payload) => {
     description: payload.description || '',
     image: payload.image || '',
   }
-  await restUpdateById('announcements', id, patch)
+  const { error } = await withTimeout(supabase.from('announcements').update(patch).eq('id', id))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const deleteAnnouncement = async (id) => {
-  await restDeleteById('announcements', id)
+  ensureClient()
+  await ensureAdmin()
+  const { error } = await withTimeout(supabase.from('announcements').delete().eq('id', id))
+  if (error) throw new Error(error.message)
 }
 
-// COMMITTEES (kurullar)
+// ------- COMMITTEES (kurullar) -------
 export const fetchCommittees = async () => {
-  const data = await restGet('committees', 'select=id,name,role,image&order=name.asc')
+  ensureClient()
+  const { data, error } = await supabase
+    .from('committees')
+    .select('id,name,role,image')
+    .order('name', { ascending: true })
+  if (error) throw new Error(error.message)
   return data || []
 }
 
 export const createCommittee = async (payload) => {
-  const insert = [{
+  ensureClient()
+  await ensureAdmin()
+  const row = {
     name: payload.name || '',
     role: payload.role || '',
     image: payload.image || '',
-  }]
-  await restInsert('committees', insert)
+  }
+  const { error } = await withTimeout(supabase.from('committees').insert(row))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const updateCommittee = async (id, payload) => {
+  ensureClient()
+  await ensureAdmin()
   const patch = {
     name: payload.name || '',
     role: payload.role || '',
     image: payload.image || '',
   }
-  await restUpdateById('committees', id, patch)
+  const { error } = await withTimeout(supabase.from('committees').update(patch).eq('id', id))
+  if (error) throw new Error(error.message)
   return null
 }
 
 export const deleteCommittee = async (id) => {
-  await restDeleteById('committees', id)
+  ensureClient()
+  await ensureAdmin()
+  const { error } = await withTimeout(supabase.from('committees').delete().eq('id', id))
+  if (error) throw new Error(error.message)
 } 

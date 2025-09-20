@@ -27,7 +27,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setError("");
     if (!supabase) {
-      setError("Sunucu yapılandırma hatası: Supabase env değişkenleri eksik.");
+      setError("Server configuration error: Missing Supabase environment variables.");
       return;
     }
     setLoading(true);
@@ -40,7 +40,7 @@ const AdminLogin = () => {
       // Navigate immediately; PrivateRoute will allow only admin
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError(err?.message || "Giriş başarısız");
+      setError(err?.message || "Sign-in failed");
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ const AdminLogin = () => {
 
       <div className="relative rounded-2xl bg-white/10 dark:bg-white/10 px-8 sm:px-12 py-10 shadow-2xl backdrop-blur-md border border-white/20 max-w-md w-full">
         <div className="text-white">
-          {/* Logo + Başlık */}
+          {/* Logo + Title */}
           <div className="mb-8 flex flex-col items-center text-center">
             {Logo && (
               <img
@@ -69,9 +69,9 @@ const AdminLogin = () => {
                 className="mb-3 drop-shadow-md"
               />
             )}
-            <h1 className="mb-1 text-2xl font-bold">Admin Girişi</h1>
+            <h1 className="mb-1 text-2xl font-bold">Admin Login</h1>
             <span className="text-gray-200 text-sm">
-              Lütfen email ve şifre giriniz
+              Please enter your email and password
             </span>
           </div>
 
@@ -93,11 +93,11 @@ const AdminLogin = () => {
               />
             </div>
 
-            {/* Şifre */}
+            {/* Password */}
             <div>
               <label className="mb-1 inline-flex items-center gap-2 text-sm text-gray-200">
                 <HiLockClosed className="text-primary" />
-                Şifre
+                Password
               </label>
               <div className="relative">
                 <input
@@ -118,26 +118,26 @@ const AdminLogin = () => {
               </div>
             </div>
 
-            {/* Hata mesajı */}
+            {/* Error message */}
             {error && <p className="text-sm text-red-200">{error}</p>}
 
-            {/* Buton */}
+            {/* Button */}
             <div className="mt-6 flex justify-center text-lg">
               <button
                 type="submit"
                 disabled={loading}
                 className="rounded-3xl bg-primary/70 hover:bg-primary/90 px-10 py-2 text-white shadow-xl transition-colors duration-300 disabled:opacity-60"
               >
-                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+                {loading ? "Signing in..." : "Sign In"}
               </button>
             </div>
           </form>
 
           <div className="mt-6 flex justify-between text-xs text-gray-200">
             <a href="/" className="hover:underline">
-              Anasayfa
+              Home
             </a>
-            <span>Yetkisiz giriş yasaktır</span>
+            <span>Unauthorized access is prohibited</span>
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   createCommittee,
   updateCommittee,
   deleteCommittee,
+  uploadMedia,
 } from "../services/adminApi";
 
 const AdminPanel = () => {
@@ -35,6 +36,18 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const displayTab = (key) => ({
+    haberler: "News",
+    duyurular: "Announcements",
+    kurullar: "Committees",
+  })[key] || key;
+  const displayTabSingular = (key) => ({
+    haberler: "News",
+    duyurular: "Announcement",
+    kurullar: "Committee",
+  })[key] || key;
 
   const loadAll = async () => {
     setLoading(true);
@@ -48,7 +61,7 @@ const AdminPanel = () => {
       setItems({ haberler, duyurular, kurullar });
     } catch (e) {
       console.error("Load error:", e);
-      setError(e?.message || "Veriler yüklenemedi");
+      setError(e?.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -64,33 +77,25 @@ const AdminPanel = () => {
     setModalOpen(true);
   };
 
-  // ---- file -> b64 ----
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(r.result);
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || uploading) return;
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      alert("Görsel 5MB üstü. Daha küçük seç.");
+      alert("Image exceeds 5MB. Please select a smaller file.");
       return;
     }
     try {
-      // mediaa bucket -> folder by tab
+      setUploading(true);
       const folder = tab === 'haberler' ? 'news' : (tab === 'duyurular' ? 'announcements' : 'committees')
-      const url = await (await import('../services/adminApi')).uploadMedia(file, folder)
+      const url = await uploadMedia(file, folder)
       setFormData((p) => ({ ...p, image: url }));
     } catch (err) {
-      alert(err?.message || "Görsel yüklenemedi.");
+      alert(err?.message || "Image upload failed.");
+    } finally {
+      setUploading(false);
     }
   };
 
-  // ---- delete ----
   const handleDelete = async (type, id) => {
     try {
       if (type === "haberler") await deleteNews(id);
@@ -98,11 +103,10 @@ const AdminPanel = () => {
       if (type === "kurullar") await deleteCommittee(id);
       setItems((prev) => ({ ...prev, [type]: prev[type].filter((i) => i.id !== id) }));
     } catch (e) {
-      alert(e?.message || "Silme başarısız");
+      alert(e?.message || "Delete failed");
     }
   };
 
-  // ---- save (add/edit) ----
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -141,17 +145,15 @@ const AdminPanel = () => {
       setModalOpen(false);
     } catch (e) {
       console.error("Save error:", e);
-      alert(e?.message || "Kaydetme başarısız");
+      alert(e?.message || "Save failed");
     } finally {
       setSaving(false);
     }
   };
 
-  // ortak input cls
   const inputCls =
     "w-full px-3 py-2 border rounded bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary outline-none";
 
-  // ---- card renderers (kendi sayfa tasarımına yakın) ----
   const NewsCard = (item, index) => (
     <div
       key={item.id}
@@ -176,7 +178,6 @@ const AdminPanel = () => {
         </p>
       </div>
 
-      {/* overlay fablar */}
       <div className="absolute top-3 right-3 flex gap-2">
         <Fab
           size="small"
@@ -306,7 +307,7 @@ const AdminPanel = () => {
               <span>/</span>
               <span className="text-base">Admin</span>
               <span>/</span>
-              <span className="capitalize">{tab}</span>
+              <span className="capitalize">{displayTab(tab)}</span>
             </div>
           </div>
         </div>
@@ -333,7 +334,7 @@ const AdminPanel = () => {
                         : "hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {displayTab(type)}
                   </button>
                 </li>
               ))}
@@ -343,12 +344,12 @@ const AdminPanel = () => {
           {/* Content */}
           <main className="flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold capitalize">{tab} Yönetimi</h2>
-              {loading && <span className="text-sm text-gray-400">Yükleniyor...</span>}
+              <h2 className="text-2xl font-bold">{displayTab(tab)} Management</h2>
+              {loading && <span className="text-sm text-gray-400">Loading...</span>}
               {error && <span className="text-sm text-red-400">{error}</span>}
             </div>
 
-            {/* Grid listeleri sayfa tasarımlarına benzer */}
+            {/* Grids */}
             {tab === "haberler" && (
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {items.haberler.map((item, idx) => NewsCard(item, idx))}
@@ -385,11 +386,10 @@ const AdminPanel = () => {
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white dark:bg-slate-950 p-6 rounded shadow-lg w-[680px] max-h-[92vh] overflow-y-auto">
               <h2 className="text-xl font-bold mb-4">
-                {editItem ? "Düzenle" : "Yeni"}{" "}
-                {tab.charAt(0).toUpperCase() + tab.slice(1, -1)}
+                {editItem ? "Edit" : "New"} {displayTabSingular(tab)}
               </h2>
 
-              {/* Upload Hero (drag-drop görünüm) */}
+              {/* Upload Hero */}
               <div className="w-full mb-5">
                 <label
                   htmlFor="admin-dropzone"
@@ -410,10 +410,10 @@ const AdminPanel = () => {
                     />
                   </svg>
                   <h2 className="mt-3 text-lg font-medium text-gray-700 dark:text-gray-200 tracking-wide">
-                    Görsel yükle (isteğe bağlı)
+                    {uploading ? 'Uploading image...' : 'Upload image (optional)'}
                   </h2>
                   <p className="mt-1 text-gray-500 dark:text-gray-400 tracking-wide text-sm">
-                    SVG, PNG, JPG, GIF (max 2MB)
+                    SVG, PNG, JPG, GIF (max 5MB)
                   </p>
                   <input
                     id="admin-dropzone"
@@ -421,39 +421,41 @@ const AdminPanel = () => {
                     className="hidden"
                     accept="image/png, image/jpeg, image/webp, image/gif, image/svg+xml"
                     onChange={handleImageFile}
+                    disabled={uploading}
                   />
                 </label>
                 {formData.image ? (
                   <div className="mt-3 flex justify-center">
                     <img
                       src={formData.image}
-                      alt="Seçilen görsel"
+                      alt="Selected image"
                       className="max-h-40 rounded shadow"
                     />
                   </div>
                 ) : null}
               </div>
 
-              {/* URL inputu (upload alternatifi) */}
+              {/* URL input (upload alternative) */}
               <div className="mb-4">
                 <input
                   className={inputCls}
                   type="text"
-                  placeholder="Görsel URL (yüklersen otomatik dolar)"
+                  placeholder="Image URL (auto-filled after upload)"
                   value={formData.image || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, image: e.target.value })
                   }
+                  disabled={uploading}
                 />
               </div>
 
-              {/* Form alanları (tab’a göre) */}
+              {/* Form fields by tab */}
               {tab === "haberler" && (
                 <div className="grid gap-3">
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Başlık"
+                    placeholder="Title"
                     value={formData.title || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -470,7 +472,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Kısa Açıklama (shortText)"
+                    placeholder="Short description"
                     value={formData.shortText || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, shortText: e.target.value })
@@ -479,7 +481,7 @@ const AdminPanel = () => {
                   <textarea
                     className={inputCls}
                     rows={4}
-                    placeholder="Detay (fullText)"
+                    placeholder="Full text"
                     value={formData.fullText || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, fullText: e.target.value })
@@ -493,7 +495,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Başlık"
+                    placeholder="Title"
                     value={formData.title || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -510,7 +512,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Yer (location)"
+                    placeholder="Location"
                     value={formData.location || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, location: e.target.value })
@@ -519,7 +521,7 @@ const AdminPanel = () => {
                   <textarea
                     className={inputCls}
                     rows={4}
-                    placeholder="Açıklama"
+                    placeholder="Description"
                     value={formData.description || ""}
                     onChange={(e) =>
                       setFormData({
@@ -536,7 +538,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Kurul Adı (name)"
+                    placeholder="Name"
                     value={formData.name || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -545,7 +547,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Görev (role)"
+                    placeholder="Role"
                     value={formData.role || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
@@ -562,15 +564,16 @@ const AdminPanel = () => {
                     setFormData({});
                   }}
                   className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700"
+                  disabled={saving}
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || uploading}
                   className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white disabled:opacity-60"
                 >
-                  {saving ? "Kaydediliyor..." : "Kaydet"}
+                  {saving ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>

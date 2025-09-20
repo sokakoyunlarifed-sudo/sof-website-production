@@ -10,7 +10,7 @@ const PrivateRoute = ({ children }) => {
   if (!session && loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center text-gray-500">
-        Yükleniyor...
+        Loading...
       </div>
     );
   }
@@ -26,7 +26,7 @@ const PrivateRoute = ({ children }) => {
   if (role == null && loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center text-gray-500">
-        Yükleniyor...
+        Loading...
       </div>
     );
   }
