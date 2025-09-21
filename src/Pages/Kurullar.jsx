@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./Layout";
 // import kurullarData from "../data/kurullar.json";
-import { fetchCommittees } from "../services/adminApi";
+// import { fetchCommittees } from "../services/adminApi";
+import { STATIC_COMMITTEES } from "../data/staticData";
 
 const Kurullar = () => {
   const [kurullar, setKurullar] = useState([]);
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchCommittees()
-        if (mounted) setKurullar(data)
-      } catch (e) {
-        console.error("Kurullar yüklenemedi:", e)
-      }
-    })()
-    return () => { mounted = false }
+    setKurullar(Array.isArray(STATIC_COMMITTEES) ? STATIC_COMMITTEES : [])
   }, []);
 
   return (

@@ -3,7 +3,8 @@ import Layout from "./Layout";
 // import newsData from "../data/haberler.json"; // src/data/haberler.json
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { fetchNews } from "../services/adminApi";
+import { STATIC_NEWS } from "../data/staticData";
+// import { fetchNews } from "../services/adminApi";
 
 const Haberlist = () => {
   const [news, setNews] = useState([]);
@@ -11,16 +12,7 @@ const Haberlist = () => {
   const itemsPerPage = 6; // her sayfada 6 haber
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchNews()
-        if (mounted) setNews(data)
-      } catch (e) {
-        console.error("Haberler yüklenemedi:", e)
-      }
-    })()
-    return () => { mounted = false }
+    setNews(Array.isArray(STATIC_NEWS) ? STATIC_NEWS : [])
   }, []);
 
   // Toplam sayfa sayısı

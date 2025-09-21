@@ -3,7 +3,8 @@ import Layout from "./Layout";
 // import duyuruData from "../data/duyurular.json";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { fetchAnnouncements } from "../services/adminApi";
+// import { fetchAnnouncements } from "../services/adminApi";
+import { STATIC_ANNOUNCEMENTS } from "../data/staticData";
 
 const Duyurular = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -11,18 +12,20 @@ const Duyurular = () => {
   const itemsPerPage = 6; // her sayfada kaç duyuru gösterilsin
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchAnnouncements()
-        // Önceki davranışı koru: en yakın tarihliden başlayarak artan sırala
-        const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-        if (mounted) setAnnouncements(sorted)
-      } catch (e) {
-        console.error("Duyurular yüklenemedi:", e)
-      }
-    })()
-    return () => { mounted = false }
+    const data = Array.isArray(STATIC_ANNOUNCEMENTS) ? STATIC_ANNOUNCEMENTS : []
+    // Yaklaşanlar (>= bugün) önce artan, geçmişler sonra azalan
+    const today = new Date(); today.setHours(0,0,0,0)
+    const sorted = [...data].sort((a, b) => {
+      const da = new Date(a.date); da.setHours(0,0,0,0)
+      const db = new Date(b.date); db.setHours(0,0,0,0)
+      const aFuture = da >= today
+      const bFuture = db >= today
+      if (aFuture && !bFuture) return -1
+      if (!aFuture && bFuture) return 1
+      if (aFuture && bFuture) return da - db // yaklaşanlar: en yakın önce
+      return db - da // geçmiş: en yeni önce
+    })
+    setAnnouncements(sorted)
   }, []);
 
   // toplam sayfa

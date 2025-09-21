@@ -4,7 +4,8 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "./Layout";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { fetchAnnouncementById } from "../services/adminApi";
+// import { fetchAnnouncementById } from "../services/adminApi";
+import { STATIC_ANNOUNCEMENTS } from "../data/staticData";
 
 const DuyuruDetail = () => {
   const { id } = useParams();
@@ -12,16 +13,14 @@ const DuyuruDetail = () => {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchAnnouncementById(id)
-        if (mounted) setDuyuru(data)
-      } catch (_e) {
-        if (mounted) setNotFound(true)
-      }
-    })()
-    return () => { mounted = false }
+    const item = (Array.isArray(STATIC_ANNOUNCEMENTS) ? STATIC_ANNOUNCEMENTS : []).find((d) => String(d.id) === String(id))
+    if (item) {
+      setDuyuru(item)
+      setNotFound(false)
+    } else {
+      setDuyuru(null)
+      setNotFound(true)
+    }
   }, [id])
 
   if (notFound) {

@@ -2,22 +2,14 @@ import React, { useEffect, useState } from 'react'
 // import HaberData from '../../data/haberler.json'
 import HaberCard from './HaberCard'
 import { Link } from 'react-router-dom'
-import { fetchNews } from '../../services/adminApi'
+// import { fetchNews } from '../../services/adminApi'
+import { STATIC_NEWS } from '../../data/staticData'
 const Haberler = () => {
   const [items, setItems] = useState([])
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchNews()
-        const top3 = data.slice(0, 3)
-        if (mounted) setItems(top3)
-      } catch (e) {
-        console.error('Haberler yüklenemedi:', e)
-      }
-    })()
-    return () => { mounted = false }
+    const top3 = (Array.isArray(STATIC_NEWS) ? STATIC_NEWS : []).slice(0, 3)
+    setItems(top3)
   }, [])
   return (
     <>

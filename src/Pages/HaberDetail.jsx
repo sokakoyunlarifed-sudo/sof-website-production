@@ -4,23 +4,22 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "./Layout";
 import { FcCalendar } from "react-icons/fc";
 import { useEffect, useState } from "react";
-import { fetchNewsById } from "../services/adminApi";
+// import { fetchNewsById } from "../services/adminApi";
+import { STATIC_NEWS } from "../data/staticData";
 const HaberDetail = () => {
   const { id } = useParams();
   const [haber, setHaber] = useState(null)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await fetchNewsById(id)
-        if (mounted) setHaber(data)
-      } catch (_e) {
-        if (mounted) setNotFound(true)
-      }
-    })()
-    return () => { mounted = false }
+    const item = (Array.isArray(STATIC_NEWS) ? STATIC_NEWS : []).find((n) => String(n.id) === String(id))
+    if (item) {
+      setHaber(item)
+      setNotFound(false)
+    } else {
+      setHaber(null)
+      setNotFound(true)
+    }
   }, [id])
 
   if (notFound) {
