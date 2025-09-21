@@ -17,17 +17,37 @@ const withTimeout = async (promise, ms = 20000) => {
   }
 }
 
+const formatError = (error) => {
+  if (!error) return 'Unknown error'
+  const parts = [error.message, error.details, error.hint, error.code].filter(Boolean)
+  return parts.join(' | ')
+}
+
+const ensureFreshAuth = async () => {
+  ensureClient()
+  const { data: sess } = await withTimeout(supabase.auth.getSession())
+  const session = sess?.session
+  if (!session) throw new Error('Not authenticated')
+  try {
+    await withTimeout(supabase.auth.refreshSession())
+  } catch (_e) {
+    // Best-effort; proceed even if refresh fails, next call will surface the error
+  }
+}
+
 // Fetch current user's role from profiles table
 const getCurrentUserRole = async () => {
-  ensureClient()
-  const { data: sessionData } = await supabase.auth.getSession()
+  await ensureFreshAuth()
+  const { data: sessionData } = await withTimeout(supabase.auth.getSession())
   const userId = sessionData?.session?.user?.id
   if (!userId) return null
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+  const { data, error } = await withTimeout(
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+  )
   if (error) return null
   return data?.role || null
 }
@@ -40,7 +60,7 @@ const ensureAdmin = async () => {
 
 // ------- MEDIA UPLOAD -------
 export const uploadMedia = async (file, folder = 'misc') => {
-  ensureClient()
+  await ensureFreshAuth()
   if (!(file instanceof File)) throw new Error('Invalid file')
   const safeFolder = (folder || 'misc').replace(/[^a-z0-9/_-]/gi, '').toLowerCase()
   const ext = (file.name?.split('.')?.pop() || 'bin').toLowerCase()
@@ -52,7 +72,7 @@ export const uploadMedia = async (file, folder = 'misc') => {
       .from('mediaa')
       .upload(path, file, { upsert: true, contentType: file.type || undefined })
   )
-  if (uploadError) throw uploadError
+  if (uploadError) throw new Error(formatError(uploadError))
 
   const { data } = supabase.storage.from('mediaa').getPublicUrl(path)
   if (!data?.publicUrl) throw new Error('Public URL not available')
@@ -62,11 +82,13 @@ export const uploadMedia = async (file, folder = 'misc') => {
 // ------- NEWS (haberler) -------
 export const fetchNews = async () => {
   ensureClient()
-  const { data, error } = await supabase
-    .from('news')
-    .select('id,title,date,short_text,full_text,image')
-    .order('date', { ascending: false })
-  if (error) throw new Error(error.message)
+  const { data, error } = await withTimeout(
+    supabase
+      .from('news')
+      .select('id,title,date,short_text,full_text,image')
+      .order('date', { ascending: false })
+  )
+  if (error) throw new Error(formatError(error))
   return (data || []).map((n) => ({
     id: n.id,
     title: n.title,
@@ -77,8 +99,27 @@ export const fetchNews = async () => {
   }))
 }
 
-export const createNews = async (payload) => {
+export const fetchNewsById = async (id) => {
   ensureClient()
+  const { data, error } = await withTimeout(
+    supabase
+      .from('news')
+      .select('id,title,date,short_text,full_text,image')
+      .eq('id', id)
+      .single()
+  )
+  if (error) throw new Error(formatError(error))
+  return {
+    id: data.id,
+    title: data.title,
+    date: data.date || '',
+    shortText: data.short_text || '',
+    fullText: data.full_text || '',
+    image: data.image || '',
+  }
+}
+
+export const createNews = async (payload) => {
   await ensureAdmin()
   const row = {
     title: payload.title || '',
@@ -88,12 +129,14 @@ export const createNews = async (payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('news').insert(row))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('createNews error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const updateNews = async (id, payload) => {
-  ensureClient()
   await ensureAdmin()
   const patch = {
     title: payload.title || '',
@@ -103,25 +146,32 @@ export const updateNews = async (id, payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('news').update(patch).eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('updateNews error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const deleteNews = async (id) => {
-  ensureClient()
   await ensureAdmin()
   const { error } = await withTimeout(supabase.from('news').delete().eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('deleteNews error:', error)
+    throw new Error(formatError(error))
+  }
 }
 
 // ------- ANNOUNCEMENTS (duyurular) -------
 export const fetchAnnouncements = async () => {
   ensureClient()
-  const { data, error } = await supabase
-    .from('announcements')
-    .select('id,title,date,location,description,image')
-    .order('date', { ascending: false })
-  if (error) throw new Error(error.message)
+  const { data, error } = await withTimeout(
+    supabase
+      .from('announcements')
+      .select('id,title,date,location,description,image')
+      .order('date', { ascending: false })
+  )
+  if (error) throw new Error(formatError(error))
   return (data || []).map((d) => ({
     id: d.id,
     title: d.title,
@@ -132,8 +182,27 @@ export const fetchAnnouncements = async () => {
   }))
 }
 
-export const createAnnouncement = async (payload) => {
+export const fetchAnnouncementById = async (id) => {
   ensureClient()
+  const { data, error } = await withTimeout(
+    supabase
+      .from('announcements')
+      .select('id,title,date,location,description,image')
+      .eq('id', id)
+      .single()
+  )
+  if (error) throw new Error(formatError(error))
+  return {
+    id: data.id,
+    title: data.title,
+    date: data.date || '',
+    location: data.location || '',
+    description: data.description || '',
+    image: data.image || '',
+  }
+}
+
+export const createAnnouncement = async (payload) => {
   await ensureAdmin()
   const row = {
     title: payload.title || '',
@@ -143,12 +212,14 @@ export const createAnnouncement = async (payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('announcements').insert(row))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('createAnnouncement error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const updateAnnouncement = async (id, payload) => {
-  ensureClient()
   await ensureAdmin()
   const patch = {
     title: payload.title || '',
@@ -158,30 +229,36 @@ export const updateAnnouncement = async (id, payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('announcements').update(patch).eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('updateAnnouncement error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const deleteAnnouncement = async (id) => {
-  ensureClient()
   await ensureAdmin()
   const { error } = await withTimeout(supabase.from('announcements').delete().eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('deleteAnnouncement error:', error)
+    throw new Error(formatError(error))
+  }
 }
 
 // ------- COMMITTEES (kurullar) -------
 export const fetchCommittees = async () => {
   ensureClient()
-  const { data, error } = await supabase
-    .from('committees')
-    .select('id,name,role,image')
-    .order('name', { ascending: true })
-  if (error) throw new Error(error.message)
+  const { data, error } = await withTimeout(
+    supabase
+      .from('committees')
+      .select('id,name,role,image')
+      .order('name', { ascending: true })
+  )
+  if (error) throw new Error(formatError(error))
   return data || []
 }
 
 export const createCommittee = async (payload) => {
-  ensureClient()
   await ensureAdmin()
   const row = {
     name: payload.name || '',
@@ -189,12 +266,14 @@ export const createCommittee = async (payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('committees').insert(row))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('createCommittee error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const updateCommittee = async (id, payload) => {
-  ensureClient()
   await ensureAdmin()
   const patch = {
     name: payload.name || '',
@@ -202,13 +281,18 @@ export const updateCommittee = async (id, payload) => {
     image: payload.image || '',
   }
   const { error } = await withTimeout(supabase.from('committees').update(patch).eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('updateCommittee error:', error)
+    throw new Error(formatError(error))
+  }
   return null
 }
 
 export const deleteCommittee = async (id) => {
-  ensureClient()
   await ensureAdmin()
   const { error } = await withTimeout(supabase.from('committees').delete().eq('id', id))
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('deleteCommittee error:', error)
+    throw new Error(formatError(error))
+  }
 } 

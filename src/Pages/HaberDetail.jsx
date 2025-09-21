@@ -1,13 +1,29 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import newsData from "../data/haberler.json";
+// import newsData from "../data/haberler.json";
 import Layout from "./Layout";
 import { FcCalendar } from "react-icons/fc";
+import { useEffect, useState } from "react";
+import { fetchNewsById } from "../services/adminApi";
 const HaberDetail = () => {
   const { id } = useParams();
-  const haber = newsData.find((item) => item.id === parseInt(id));
+  const [haber, setHaber] = useState(null)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!haber) {
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await fetchNewsById(id)
+        if (mounted) setHaber(data)
+      } catch (_e) {
+        if (mounted) setNotFound(true)
+      }
+    })()
+    return () => { mounted = false }
+  }, [id])
+
+  if (notFound) {
     return (
       <Layout>
         <div className="container mx-auto px-6 py-10">
@@ -18,6 +34,16 @@ const HaberDetail = () => {
         </div>
       </Layout>
     );
+  }
+
+  if (!haber) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-10">
+          <h1 className="text-2xl font-bold">Yükleniyor...</h1>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -47,27 +73,18 @@ const HaberDetail = () => {
 
             {/* Metin */}
             <div className="space-y-5 order-2 sm:order-1 xl:pr-10">
-              <h1
-                data-aos="fade-up"
-                className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-gray-100"
-              >
-                {haber.title}
-              </h1>
-              <p
-                data-aos="fade-up"
-                data-aos-delay="300"
-                className="text-gray-700 dark:text-gray-300 leading-relaxed"
-              >
+              <h1 className="text-3xl font-bold">{haber.title}</h1>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 {haber.fullText}
               </p>
-              <Link
-                to="/haberler"
-                data-aos="fade-up"
-                data-aos-delay="500"
-                className="btn-primary inline-block"
-              >
-                ← Haberler listesine dön
-              </Link>
+              <div className="mt-4">
+                <Link
+                  to="/haberler"
+                  className="inline-block text-primary hover:underline"
+                >
+                  Tüm haberler
+                </Link>
+              </div>
             </div>
           </div>
         </div>

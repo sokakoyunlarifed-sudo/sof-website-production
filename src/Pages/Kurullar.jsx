@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./Layout";
-import kurullarData from "../data/kurullar.json";
+// import kurullarData from "../data/kurullar.json";
+import { fetchCommittees } from "../services/adminApi";
 
 const Kurullar = () => {
   const [kurullar, setKurullar] = useState([]);
 
   useEffect(() => {
-    setKurullar(kurullarData);
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await fetchCommittees()
+        if (mounted) setKurullar(data)
+      } catch (e) {
+        console.error("Failed to load committees:", e)
+      }
+    })()
+    return () => { mounted = false }
   }, []);
 
   return (

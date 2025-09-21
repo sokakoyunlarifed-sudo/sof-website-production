@@ -1,14 +1,30 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import duyuruData from "../data/duyurular.json";
+// import duyuruData from "../data/duyurular.json";
 import Layout from "./Layout";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { fetchAnnouncementById } from "../services/adminApi";
 
 const DuyuruDetail = () => {
   const { id } = useParams();
-  const duyuru = duyuruData.find((item) => item.id === parseInt(id));
+  const [duyuru, setDuyuru] = useState(null)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!duyuru) {
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await fetchAnnouncementById(id)
+        if (mounted) setDuyuru(data)
+      } catch (_e) {
+        if (mounted) setNotFound(true)
+      }
+    })()
+    return () => { mounted = false }
+  }, [id])
+
+  if (notFound) {
     return (
       <Layout>
         <div className="container mx-auto px-6 py-10">
@@ -19,6 +35,16 @@ const DuyuruDetail = () => {
         </div>
       </Layout>
     );
+  }
+
+  if (!duyuru) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-10">
+          <h1 className="text-2xl font-bold">Yükleniyor...</h1>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -49,27 +75,18 @@ const DuyuruDetail = () => {
 
             {/* Metin */}
             <div className="space-y-5 order-2 sm:order-1 xl:pr-10">
-              <h1
-                data-aos="fade-up"
-                className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-gray-100"
-              >
-                {duyuru.title}
-              </h1>
-              <p
-                data-aos="fade-up"
-                data-aos-delay="300"
-                className="text-gray-700 dark:text-gray-300 leading-relaxed"
-              >
+              <h1 className="text-3xl font-bold">{duyuru.title}</h1>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 {duyuru.description}
               </p>
-              <Link
-                to="/duyurular"
-                data-aos="fade-up"
-                data-aos-delay="500"
-                className="btn-primary inline-block"
-              >
-                ← Duyurular listesine dön
-              </Link>
+              <div className="mt-4">
+                <Link
+                  to="/duyurular"
+                  className="inline-block text-primary hover:underline"
+                >
+                  Tüm duyurular
+                </Link>
+              </div>
             </div>
           </div>
         </div>

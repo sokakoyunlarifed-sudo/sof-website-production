@@ -108,44 +108,66 @@ const AdminPanel = () => {
   };
 
   const handleSave = async () => {
+    let step = 'idle'
     try {
       setSaving(true);
       if (tab === "haberler") {
+        step = 'saving news'
         if (editItem) {
           await updateNews(editItem.id, formData);
         } else {
           await createNews(formData);
         }
-        const fresh = await fetchNews();
-        setItems((p) => ({ ...p, haberler: fresh }));
+        step = 'refreshing news'
+        try {
+          const fresh = await fetchNews();
+          setItems((p) => ({ ...p, haberler: fresh }));
+        } catch (rfErr) {
+          console.warn('Refresh news failed:', rfErr)
+          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+        }
       }
 
       if (tab === "duyurular") {
+        step = 'saving announcement'
         if (editItem) {
           await updateAnnouncement(editItem.id, formData);
         } else {
           await createAnnouncement(formData);
         }
-        const fresh = await fetchAnnouncements();
-        setItems((p) => ({ ...p, duyurular: fresh }));
+        step = 'refreshing announcements'
+        try {
+          const fresh = await fetchAnnouncements();
+          setItems((p) => ({ ...p, duyurular: fresh }));
+        } catch (rfErr) {
+          console.warn('Refresh announcements failed:', rfErr)
+          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+        }
       }
 
       if (tab === "kurullar") {
+        step = 'saving committee'
         if (editItem) {
           await updateCommittee(editItem.id, formData);
         } else {
           await createCommittee(formData);
         }
-        const fresh = await fetchCommittees();
-        setItems((p) => ({ ...p, kurullar: fresh }));
+        step = 'refreshing committees'
+        try {
+          const fresh = await fetchCommittees();
+          setItems((p) => ({ ...p, kurullar: fresh }));
+        } catch (rfErr) {
+          console.warn('Refresh committees failed:', rfErr)
+          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+        }
       }
 
       setFormData({});
       setEditItem(null);
       setModalOpen(false);
     } catch (e) {
-      console.error("Save error:", e);
-      alert(e?.message || "Save failed");
+      console.error("Save error at step:", step, e);
+      alert(e?.message || `Save failed at step: ${step}`);
     } finally {
       setSaving(false);
     }

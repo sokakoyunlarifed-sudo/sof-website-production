@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./Layout";
-import duyuruData from "../data/duyurular.json";
+// import duyuruData from "../data/duyurular.json";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { fetchAnnouncements } from "../services/adminApi";
 
 const Duyurular = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -10,11 +11,18 @@ const Duyurular = () => {
   const itemsPerPage = 6; // her sayfada kaç duyuru gösterilsin
 
   useEffect(() => {
-    // En yakın tarihliden başlayacak şekilde sırala
-    const sorted = [...duyuruData].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-    setAnnouncements(sorted);
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await fetchAnnouncements()
+        // Önceki davranışı koru: en yakın tarihliden başlayarak artan sırala
+        const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
+        if (mounted) setAnnouncements(sorted)
+      } catch (e) {
+        console.error("Failed to load announcements:", e)
+      }
+    })()
+    return () => { mounted = false }
   }, []);
 
   // toplam sayfa
