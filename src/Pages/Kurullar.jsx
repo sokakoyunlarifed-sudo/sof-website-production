@@ -21,7 +21,7 @@ const Kurullar = () => {
 
   return (
     <Layout>
-      <section className="bg-gray-100 dark:bg-gray-900 dark:text-white py-16">
+      <section className="bg-gray-100 dark:bg-gray-900 dark:text-white py-16 min-h-[60vh]">
         <div className="container px-5 mx-auto">
           {/* Başlık */}
           <div className="flex flex-col text-center w-full mb-20">
@@ -34,6 +34,11 @@ const Kurullar = () => {
           </div>
 
           {/* Grid */}
+          {kurullar.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-16">
+              Şu anda görüntülenecek kurul bulunmuyor.
+            </div>
+          ) : (
           <div className="flex flex-wrap -m-2">
             {kurullar.map((kurul, index) => (
               <div key={kurul.id} className="p-2 lg:w-1/3 md:w-1/2 w-full">
@@ -59,6 +64,7 @@ const Kurullar = () => {
               </div>
             ))}
           </div>
+          )}
         </div>
       </section>
     </Layout>

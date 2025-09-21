@@ -44,13 +44,18 @@ const Duyurular = () => {
 
   return (
     <Layout>
-      <section className="py-10 bg-gray-100 dark:bg-gray-900 dark:text-white">
+      <section className="py-10 bg-gray-100 dark:bg-gray-900 dark:text-white min-h-[60vh]">
         <div className="container mx-auto px-6">
   <h1 className="text-3xl font-bold mb-6">Duyurular</h1>
   <p className="text-gray-600 dark:text-gray-400 mb-8">
     Gelecek etkinliklerimizi ve kayıt tarihlerini buradan takip edebilirsiniz.
   </p>
 
+  {paginated.length === 0 ? (
+    <div className="text-center text-gray-500 dark:text-gray-400 py-16">
+      Şu anda görüntülenecek duyuru bulunmuyor.
+    </div>
+  ) : (
   <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
     {paginated.map((item, index) => (
       <Link
@@ -88,6 +93,7 @@ const Duyurular = () => {
       </Link>
     ))}
   </div>
+  )}
 
   {/* Pagination */}
   {totalPages > 1 && (
