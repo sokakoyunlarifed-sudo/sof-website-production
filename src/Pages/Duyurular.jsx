@@ -19,7 +19,7 @@ const Duyurular = () => {
         const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
         if (mounted) setAnnouncements(sorted)
       } catch (e) {
-        console.error("Failed to load announcements:", e)
+        console.error("Duyurular yüklenemedi:", e)
       }
     })()
     return () => { mounted = false }

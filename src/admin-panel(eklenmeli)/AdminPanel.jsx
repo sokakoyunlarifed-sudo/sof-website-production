@@ -39,14 +39,14 @@ const AdminPanel = () => {
   const [uploading, setUploading] = useState(false);
 
   const displayTab = (key) => ({
-    haberler: "News",
-    duyurular: "Announcements",
-    kurullar: "Committees",
+    haberler: "Haberler",
+    duyurular: "Duyurular",
+    kurullar: "Kurullar",
   })[key] || key;
   const displayTabSingular = (key) => ({
-    haberler: "News",
-    duyurular: "Announcement",
-    kurullar: "Committee",
+    haberler: "Haber",
+    duyurular: "Duyuru",
+    kurullar: "Kurul",
   })[key] || key;
 
   const loadAll = async () => {
@@ -60,8 +60,8 @@ const AdminPanel = () => {
       ]);
       setItems({ haberler, duyurular, kurullar });
     } catch (e) {
-      console.error("Load error:", e);
-      setError(e?.message || "Failed to load data");
+      console.error("Yükleme hatası:", e);
+      setError(e?.message || "Veriler yüklenemedi");
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ const AdminPanel = () => {
     const file = e.target.files?.[0];
     if (!file || uploading) return;
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      alert("Image exceeds 5MB. Please select a smaller file.");
+      alert("Görsel 5MB sınırını aşıyor. Lütfen daha küçük bir dosya seçiniz.");
       return;
     }
     try {
@@ -90,7 +90,7 @@ const AdminPanel = () => {
       const url = await uploadMedia(file, folder)
       setFormData((p) => ({ ...p, image: url }));
     } catch (err) {
-      alert(err?.message || "Image upload failed.");
+      alert(err?.message || "Görsel yükleme başarısız.");
     } finally {
       setUploading(false);
     }
@@ -103,62 +103,62 @@ const AdminPanel = () => {
       if (type === "kurullar") await deleteCommittee(id);
       setItems((prev) => ({ ...prev, [type]: prev[type].filter((i) => i.id !== id) }));
     } catch (e) {
-      alert(e?.message || "Delete failed");
+      alert(e?.message || "Silme işlemi başarısız");
     }
   };
 
   const handleSave = async () => {
-    let step = 'idle'
+    let step = 'beklemede'
     try {
       setSaving(true);
       if (tab === "haberler") {
-        step = 'saving news'
+        step = 'haber kaydediliyor'
         if (editItem) {
           await updateNews(editItem.id, formData);
         } else {
           await createNews(formData);
         }
-        step = 'refreshing news'
+        step = 'haberler yenileniyor'
         try {
           const fresh = await fetchNews();
           setItems((p) => ({ ...p, haberler: fresh }));
         } catch (rfErr) {
-          console.warn('Refresh news failed:', rfErr)
-          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+          console.warn('Haber yenileme başarısız:', rfErr)
+          alert('Kaydedildi ancak yenileme başarısız. Lütfen sayfayı yenileyin.')
         }
       }
 
       if (tab === "duyurular") {
-        step = 'saving announcement'
+        step = 'duyuru kaydediliyor'
         if (editItem) {
           await updateAnnouncement(editItem.id, formData);
         } else {
           await createAnnouncement(formData);
         }
-        step = 'refreshing announcements'
+        step = 'duyurular yenileniyor'
         try {
           const fresh = await fetchAnnouncements();
           setItems((p) => ({ ...p, duyurular: fresh }));
         } catch (rfErr) {
-          console.warn('Refresh announcements failed:', rfErr)
-          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+          console.warn('Duyuru yenileme başarısız:', rfErr)
+          alert('Kaydedildi ancak yenileme başarısız. Lütfen sayfayı yenileyin.')
         }
       }
 
       if (tab === "kurullar") {
-        step = 'saving committee'
+        step = 'kurul kaydediliyor'
         if (editItem) {
           await updateCommittee(editItem.id, formData);
         } else {
           await createCommittee(formData);
         }
-        step = 'refreshing committees'
+        step = 'kurullar yenileniyor'
         try {
           const fresh = await fetchCommittees();
           setItems((p) => ({ ...p, kurullar: fresh }));
         } catch (rfErr) {
-          console.warn('Refresh committees failed:', rfErr)
-          alert('Saved, but refresh failed. Please reload the page to see latest data.')
+          console.warn('Kurul yenileme başarısız:', rfErr)
+          alert('Kaydedildi ancak yenileme başarısız. Lütfen sayfayı yenileyin.')
         }
       }
 
@@ -166,8 +166,8 @@ const AdminPanel = () => {
       setEditItem(null);
       setModalOpen(false);
     } catch (e) {
-      console.error("Save error at step:", step, e);
-      alert(e?.message || `Save failed at step: ${step}`);
+      console.error("Kaydetme hatası, adım:", step, e);
+      alert(e?.message || `Kaydetme işlemi başarısız. Adım: ${step}`);
     } finally {
       setSaving(false);
     }
@@ -324,10 +324,10 @@ const AdminPanel = () => {
             </button>
             <div className="text-sm text-gray-400 flex items-center gap-2">
               <span className="text-green-700 font-medium">
-                <a href="/">Home</a>
+                <a href="/">Anasayfa</a>
               </span>
               <span>/</span>
-              <span className="text-base">Admin</span>
+              <span className="text-base">Yönetim</span>
               <span>/</span>
               <span className="capitalize">{displayTab(tab)}</span>
             </div>
@@ -341,7 +341,7 @@ const AdminPanel = () => {
               sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             } bg-white dark:bg-slate-950 shadow p-4`}
           >
-            <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
+            <h2 className="text-xl font-bold mb-6">Yönetim Paneli</h2>
             <ul className="space-y-2">
               {["haberler", "duyurular", "kurullar"].map((type) => (
                 <li key={type}>
@@ -366,8 +366,8 @@ const AdminPanel = () => {
           {/* Content */}
           <main className="flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">{displayTab(tab)} Management</h2>
-              {loading && <span className="text-sm text-gray-400">Loading...</span>}
+              <h2 className="text-2xl font-bold">{displayTab(tab)} Yönetimi</h2>
+              {loading && <span className="text-sm text-gray-400">Yükleniyor...</span>}
               {error && <span className="text-sm text-red-400">{error}</span>}
             </div>
 
@@ -408,7 +408,7 @@ const AdminPanel = () => {
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white dark:bg-slate-950 p-6 rounded shadow-lg w-[680px] max-h-[92vh] overflow-y-auto">
               <h2 className="text-xl font-bold mb-4">
-                {editItem ? "Edit" : "New"} {displayTabSingular(tab)}
+                {editItem ? "Düzenle" : "Yeni"} {displayTabSingular(tab)}
               </h2>
 
               {/* Upload Hero */}
@@ -432,10 +432,10 @@ const AdminPanel = () => {
                     />
                   </svg>
                   <h2 className="mt-3 text-lg font-medium text-gray-700 dark:text-gray-200 tracking-wide">
-                    {uploading ? 'Uploading image...' : 'Upload image (optional)'}
+                    {uploading ? 'Görsel yükleniyor...' : 'Görsel yükle (opsiyonel)'}
                   </h2>
                   <p className="mt-1 text-gray-500 dark:text-gray-400 tracking-wide text-sm">
-                    SVG, PNG, JPG, GIF (max 5MB)
+                    SVG, PNG, JPG, GIF (en fazla 5MB)
                   </p>
                   <input
                     id="admin-dropzone"
@@ -450,7 +450,7 @@ const AdminPanel = () => {
                   <div className="mt-3 flex justify-center">
                     <img
                       src={formData.image}
-                      alt="Selected image"
+                      alt="Seçilen görsel"
                       className="max-h-40 rounded shadow"
                     />
                   </div>
@@ -462,7 +462,7 @@ const AdminPanel = () => {
                 <input
                   className={inputCls}
                   type="text"
-                  placeholder="Image URL (auto-filled after upload)"
+                  placeholder="Görsel URL'si (yüklemeden sonra otomatik dolar)"
                   value={formData.image || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, image: e.target.value })
@@ -477,7 +477,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Title"
+                    placeholder="Başlık"
                     value={formData.title || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -494,7 +494,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Short description"
+                    placeholder="Kısa açıklama"
                     value={formData.shortText || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, shortText: e.target.value })
@@ -503,7 +503,7 @@ const AdminPanel = () => {
                   <textarea
                     className={inputCls}
                     rows={4}
-                    placeholder="Full text"
+                    placeholder="Tam metin"
                     value={formData.fullText || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, fullText: e.target.value })
@@ -517,7 +517,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Title"
+                    placeholder="Başlık"
                     value={formData.title || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -534,7 +534,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Location"
+                    placeholder="Konum"
                     value={formData.location || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, location: e.target.value })
@@ -543,7 +543,7 @@ const AdminPanel = () => {
                   <textarea
                     className={inputCls}
                     rows={4}
-                    placeholder="Description"
+                    placeholder="Açıklama"
                     value={formData.description || ""}
                     onChange={(e) =>
                       setFormData({
@@ -560,7 +560,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Name"
+                    placeholder="Ad"
                     value={formData.name || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -569,7 +569,7 @@ const AdminPanel = () => {
                   <input
                     className={inputCls}
                     type="text"
-                    placeholder="Role"
+                    placeholder="Görev"
                     value={formData.role || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
@@ -588,14 +588,14 @@ const AdminPanel = () => {
                   className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700"
                   disabled={saving}
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || uploading}
                   className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white disabled:opacity-60"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? "Kaydediliyor..." : "Kaydet"}
                 </button>
               </div>
             </div>

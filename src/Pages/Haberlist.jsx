@@ -17,7 +17,7 @@ const Haberlist = () => {
         const data = await fetchNews()
         if (mounted) setNews(data)
       } catch (e) {
-        console.error("Failed to load news:", e)
+        console.error("Haberler yüklenemedi:", e)
       }
     })()
     return () => { mounted = false }

@@ -14,7 +14,7 @@ const Haberler = () => {
         const top3 = data.slice(0, 3)
         if (mounted) setItems(top3)
       } catch (e) {
-        console.error('Failed to load news:', e)
+        console.error('Haberler yüklenemedi:', e)
       }
     })()
     return () => { mounted = false }

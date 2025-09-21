@@ -13,7 +13,7 @@ const Kurullar = () => {
         const data = await fetchCommittees()
         if (mounted) setKurullar(data)
       } catch (e) {
-        console.error("Failed to load committees:", e)
+        console.error("Kurullar yüklenemedi:", e)
       }
     })()
     return () => { mounted = false }
