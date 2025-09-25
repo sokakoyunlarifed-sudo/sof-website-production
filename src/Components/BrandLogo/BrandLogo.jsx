@@ -1,9 +1,9 @@
 import React from "react";
 
 // 3 logoyu import et
-import AlfazLogo from "../assets/logos/Alfaz_Logo.png";
-import CankiriLogo from "../assets/logos/Cankiri_Logo.png";
-import PgLogo from "../assets/logos/Pg_Logo.png";
+import AlfazLogo from "../../assets/logos/Alfaz_Logo.png";
+import CankiriLogo from "../../assets/logos/Cankiri_logo.png";
+import PgLogo from "../../assets/logos/Pg_Logo.png";
 
 const BrandLogo = () => {
   return (
