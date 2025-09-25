@@ -19,20 +19,21 @@ const BrandLogo = () => {
           className="flex flex-wrap animate-marquee items-center justify-evenly gap-6 py-6 md:px-100"
         >
           <img
-            src={AlfazLogo}
-            alt="Alfaz Logo"
-            className="w-24 h-24 object-contain"
-          />
-          <img
-            src={CankiriLogo}
-            alt="Çankırı Logo"
-            className="w-24 h-24 object-contain"
-          />
-          <img
-            src={PgLogo}
-            alt="PG Logo"
-            className="w-24 h-24 object-contain"
-          />
+  src={AlfazLogo}
+  alt="Alfaz Logo"
+  className="w-32 h-32 object-contain bg-white p-2 rounded"
+ />
+<img
+  src={CankiriLogo}
+  alt="Çankırı Logo"
+  className="w-32 h-32 object-contain bg-white p-2 rounded"
+/>
+<img
+  src={PgLogo}
+  alt="PG Logo"
+  className="w-32 h-32 object-contain bg-white p-2 rounded"
+/>
+
         </div>
       </div>
     </div>
