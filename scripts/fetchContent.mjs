@@ -1,4 +1,4 @@
-import { Client } from 'pg'
+import { createClient } from '@supabase/supabase-js'
 import { mkdir, writeFile, readFile } from 'fs/promises'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
@@ -26,37 +26,19 @@ async function loadEnvFromDotenv() {
 
 await loadEnvFromDotenv()
 
-const connectionString = 'postgres://homserver:P0stGre5_h0m3s3rv3r_2025!@127.0.0.1:5432/homesofdb'
-const client = new Client({ connectionString })
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Error: Supabase credentials missing.')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 const outDir = resolve(__dirname, '../src/data')
 
 async function ensureDir(dir) {
   await mkdir(dir, { recursive: true })
-}
-
-function toNewsRow(n) {
-  return {
-    id: n.id,
-    title: n.title,
-    date: n.date ? new Date(n.date).toISOString() : '',
-    shortText: n.short_text || '',
-    fullText: n.full_text || '',
-    image: n.image || '',
-    video_url: n.video_url || null,
-    images: n.images || []
-  }
-}
-
-function toAnnouncementRow(d) {
-  return {
-    id: d.id,
-    title: d.title,
-    date: d.date ? new Date(d.date).toISOString() : '',
-    location: d.location || '',
-    description: d.description || '',
-    image: d.image || ''
-  }
 }
 
 function jsLiteral(obj) {
@@ -64,39 +46,31 @@ function jsLiteral(obj) {
 }
 
 async function main() {
-  console.log('İçerik çekiliyor...')
+  console.log('İçerik Supabase\'den çekiliyor...')
   await ensureDir(outDir)
 
-  let newsArr = [];
-  let annArr = [];
-  let comArr = [];
+  const { data: newsArr, error: newsErr } = await supabase
+    .from('news')
+    .select('*')
+    .order('date', { ascending: false })
 
-  try {
-    await client.connect()
+  if (newsErr) console.error('News error:', newsErr.message)
 
-    const { rows: news } = await client.query(`
-      SELECT n.id, n.title, n.date, n.short_text, n.full_text, n.image, n.video_url,
-      (SELECT json_agg(ni.image_url) FROM news_images ni WHERE ni.news_id = n.id) as images
-      FROM public.news n ORDER BY n.date DESC
-    `)
-    newsArr = news.map(toNewsRow)
+  const { data: annArr, error: annErr } = await supabase
+    .from('announcements')
+    .select('*')
+    .order('date', { ascending: false })
 
-    const { rows: ann } = await client.query(`
-      SELECT id, title, date, location, description, image FROM public.announcements ORDER BY date DESC
-    `)
-    annArr = ann.map(toAnnouncementRow)
+  if (annErr) console.error('Announcements error:', annErr.message)
 
-    const { rows: com } = await client.query(`
-      SELECT id, name, role, image FROM public.committees ORDER BY name ASC
-    `)
-    comArr = com
-  } catch (err) {
-    console.error("Warning: DB Connection failed. Returning empty data. Error:", err.message);
-  } finally {
-    try { await client.end() } catch (e) { }
-  }
+  const { data: comArr, error: comErr } = await supabase
+    .from('committees')
+    .select('*')
+    .order('name', { ascending: true })
 
-  const moduleCode = `// Auto-generated at build time. Do not edit.\nexport const STATIC_NEWS = ${jsLiteral(newsArr)};\nexport const STATIC_ANNOUNCEMENTS = ${jsLiteral(annArr)};\nexport const STATIC_COMMITTEES = ${jsLiteral(comArr)};\n`
+  if (comErr) console.error('Committees error:', comErr.message)
+
+  const moduleCode = `// Auto-generated at build time via Supabase. Do not edit.\nexport const STATIC_NEWS = ${jsLiteral(newsArr || [])};\nexport const STATIC_ANNOUNCEMENTS = ${jsLiteral(annArr || [])};\nexport const STATIC_COMMITTEES = ${jsLiteral(comArr || [])};\n`
 
   await writeFile(resolve(outDir, 'staticData.js'), moduleCode, 'utf8')
   console.log('İçerik gömülü modül üretildi: src/data/staticData.js')
@@ -105,4 +79,4 @@ async function main() {
 main().catch((e) => {
   console.error('İçerik çekme hatası:', e?.message || e)
   process.exit(1)
-}).finally(() => client.end())
+})
