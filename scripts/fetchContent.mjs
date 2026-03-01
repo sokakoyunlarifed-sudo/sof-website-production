@@ -70,7 +70,35 @@ async function main() {
 
   if (comErr) console.error('Committees error:', comErr.message)
 
-  const moduleCode = `// Auto-generated at build time via Supabase. Do not edit.\nexport const STATIC_NEWS = ${jsLiteral(newsArr || [])};\nexport const STATIC_ANNOUNCEMENTS = ${jsLiteral(annArr || [])};\nexport const STATIC_COMMITTEES = ${jsLiteral(comArr || [])};\n`
+  const mapItem = (item) => {
+    if (!item) return item;
+    const newItem = { ...item };
+    // Map snake_case to camelCase for frontend
+    if (item.short_text !== undefined) newItem.shortText = item.short_text;
+    if (item.full_text !== undefined) newItem.fullText = item.full_text;
+
+    // Fix relative image URLs (Supabase storage)
+    const fixUrl = (url) => {
+      if (!url) return url;
+      if (url.startsWith('/storage/v1/object/public/')) {
+        return `${supabaseUrl}${url}`;
+      }
+      return url;
+    };
+
+    if (newItem.image) newItem.image = fixUrl(newItem.image);
+    if (newItem.image_url) newItem.image_url = fixUrl(newItem.image_url);
+    if (Array.isArray(newItem.images)) {
+      newItem.images = newItem.images.map(fixUrl);
+    }
+    return newItem;
+  };
+
+  const finalNews = (newsArr || []).map(mapItem);
+  const finalAnnouncements = (annArr || []).map(mapItem);
+  const finalCommittees = (comArr || []).map(mapItem);
+
+  const moduleCode = `// Auto-generated at build time via Supabase. Do not edit.\nexport const STATIC_NEWS = ${jsLiteral(finalNews)};\nexport const STATIC_ANNOUNCEMENTS = ${jsLiteral(finalAnnouncements)};\nexport const STATIC_COMMITTEES = ${jsLiteral(finalCommittees)};\n`
 
   await writeFile(resolve(outDir, 'staticData.js'), moduleCode, 'utf8')
   console.log('İçerik gömülü modül üretildi: src/data/staticData.js')
