@@ -1,6 +1,23 @@
 // Auto-generated at build time via Supabase. Do not edit.
 export const STATIC_NEWS = [
   {
+    "id": "b407483e-bd7f-4475-91c4-6a0838fa7396",
+    "title": "Yeni haber",
+    "date": "2026-03-18",
+    "short_text": "hi",
+    "full_text": "sakam",
+    "image": "https://s3.sof.web.tr/sof-media/news/1772378972671-4b45850d-2a11-4d1e-80e6-545f5833887e.jpg",
+    "created_at": "2026-03-01T15:29:55.995365+00:00",
+    "video_url": "https://www.youtube.com/watch?v=wINvxNUP7zg&t=1229s",
+    "images": [
+      "https://s3.sof.web.tr/sof-media/news/1772378980364-cf23daa6-fc21-4734-af35-a9a0f8d562bb.png",
+      "https://s3.sof.web.tr/sof-media/news/1772378983926-a02e6acb-1621-4db0-91cf-5fb1d7a446e9.png",
+      "https://s3.sof.web.tr/sof-media/news/1772378987929-a99eb3e3-3cec-49ad-a4b7-a8dd9269cf63.png"
+    ],
+    "shortText": "hi",
+    "fullText": "sakam"
+  },
+  {
     "id": "6b3068e6-db71-4261-833f-560619122397",
     "title": "Alâeddin Özdenören İmam Hatip Ortaokulu’nda Geleneksel Sokak Oyunları Şenliği",
     "date": "2025-09-29",
