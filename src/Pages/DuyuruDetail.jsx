@@ -61,7 +61,7 @@ const DuyuruDetail = () => {
               <div
                 data-aos="slide-right"
                 data-aos-delay="300"
-                className="bg-white dark:bg-gray-900 px-4 py-2 rounded-xl shadow-md absolute -bottom-5 right-0 sm:-right-8"
+                className="bg-white dark:bg-gray-900 px-4 py-2 rounded-xl shadow-md absolute -bottom-5 right-0 sm:-right-4"
               >
                 <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <FaCalendarAlt /> <span>{duyuru.date}</span>

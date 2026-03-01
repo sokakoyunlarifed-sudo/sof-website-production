@@ -76,7 +76,7 @@ const HaberDetail = () => {
         <div className="container min-h-[620px] flex flex-col mt-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {/* Görsel Slider */}
-            <div data-aos="zoom-in" className="relative w-full overflow-hidden mb-6 md:mb-0">
+            <div data-aos="zoom-in" className="relative w-full mb-6 md:mb-0">
               {imagesToShow.length > 1 ? (
                 <Slider {...sliderSettings} className="w-full">
                   {imagesToShow.map((imgUrl, i) => (
