@@ -18,7 +18,7 @@ const FooterLinks = [
 // İletişim bilgileri
 const ContactInfo = [
   { id: 1, icon: <FaMapMarkerAlt />, text: "Ankara, Türkiye" },
-  { id: 2, icon: <FaPhoneAlt />, text: "+90 312 123 45 67" },
+  { id: 2, icon: <FaPhoneAlt />, text: "+90 532 722 36 16" },
   { id: 3, icon: <FaEnvelope />, text: "info@sof.web.tr" },
 ]
 

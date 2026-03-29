@@ -62,7 +62,7 @@ const Iletisim = () => {
                   TELEFON
                 </h2>
                 <p className="leading-relaxed text-gray-600 dark:text-gray-300">
-                  +90 312 000 00 00
+                  +90 532 722 36 16
                 </p>
               </div>
             </div>
