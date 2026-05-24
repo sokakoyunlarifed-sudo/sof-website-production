@@ -77,7 +77,7 @@ async function main() {
     if (item.short_text !== undefined) newItem.shortText = item.short_text;
     if (item.full_text !== undefined) newItem.fullText = item.full_text;
 
-    // Fix image URLs (Supabase or MinIO relative)
+    // Fix image URLs (Supabase relative)
     const fixUrl = (url) => {
       if (!url) return url;
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -86,10 +86,7 @@ async function main() {
         return `${supabaseUrl}${url}`;
       }
 
-      // If it's a relative path and doesn't look like a standard path, 
-      // it might be a MinIO key. We assume public endpoint.
-      const minioEndpoint = 'https://s3.sof.web.tr/sof-media';
-      return `${minioEndpoint}/${url.startsWith('/') ? url.slice(1) : url}`;
+      return url;
     };
 
     if (newItem.image) newItem.image = fixUrl(newItem.image);

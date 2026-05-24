@@ -80,8 +80,8 @@ const AdminPanel = () => {
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file || uploading) return;
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      alert("Görsel 5MB sınırını aşıyor. Lütfen daha küçük bir dosya seçiniz.");
+    if (file.size > 15 * 1024 * 1024) { // 15MB limit
+      alert("Görsel 15MB sınırını aşıyor. Lütfen daha küçük bir dosya seçiniz.");
       return;
     }
     try {

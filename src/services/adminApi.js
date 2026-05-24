@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient'
+import imageCompression from 'browser-image-compression'
 
 // Basic guard to ensure Supabase client is configured
 const ensureClient = () => {
@@ -62,15 +63,35 @@ const ensureAdmin = async () => {
 export const uploadMedia = async (file, folder = 'misc') => {
   await ensureFreshAuth()
   if (!(file instanceof File)) throw new Error('Geçersiz dosya')
+
+  // Client-side image compression options
+  const options = {
+    maxSizeMB: 0.2, // Compress to ~200KB max
+    maxWidthOrHeight: 1280, // Sane dimensions max width/height
+    useWebWorker: true,
+    fileType: 'image/webp', // WebP conversion for maximum efficiency
+  }
+
+  let compressedFile = file
+  try {
+    const compressedBlob = await imageCompression(file, options)
+    const timestamp = Date.now()
+    const originalName = file.name || 'image.png'
+    const baseName = originalName.substring(0, originalName.lastIndexOf('.')) || originalName
+    const cleanBaseName = baseName.replace(/[^a-z0-9/_-]/gi, '').toLowerCase()
+    const fileName = `${timestamp}_${cleanBaseName}.webp`
+    compressedFile = new File([compressedBlob], fileName, { type: 'image/webp' })
+  } catch (err) {
+    console.warn('Görsel sıkıştırma başarısız oldu, orijinal görsel yüklenecek:', err)
+  }
+
   const safeFolder = (folder || 'misc').replace(/[^a-z0-9/_-]/gi, '').toLowerCase()
-  const ext = (file.name?.split('.')?.pop() || 'bin').toLowerCase()
-  const unique = `${Date.now()}-${(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2))}`
-  const path = `${safeFolder}/${unique}.${ext}`
+  const path = `${safeFolder}/${compressedFile.name}`
 
   const { error: uploadError } = await withTimeout(
     supabase.storage
       .from('mediaa')
-      .upload(path, file, { upsert: true, contentType: file.type || undefined })
+      .upload(path, compressedFile, { upsert: true, cacheControl: '31536000', contentType: 'image/webp' })
   )
   if (uploadError) throw new Error(formatError(uploadError))
 
